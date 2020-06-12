@@ -6,22 +6,49 @@ var qs = require('querystring');
 var du = require('date-utils');
 var mysql = require('mysql');
 
-var dbConn = mysql.createConnection({
+// Database connection
+var db_config = {
   host: 'localhost',
   user: 'root',
-  password:'allocation1!',
+  password:'password',
   database:'codemap'
-});
+};
 
-dbConn.connect();
+var dbConn = mysql.createConnection(db_config);
 
+function handleDisconnect(){
+  dbConn = mysql.createConnection(db_config);
 
+  dbConn.connect(function (err){
+    if(err) {
+      logging("MYSQL", "ERROR when connecting to db : "+ err);
+      setTimeout(handleDisconnect, 2000);
+    }
+    else{
+      logging("MYSQL", "DB Connected.");
+    }
+  });
 
-const up = "msg";
-const down = "msg";
+  dbConn.on('error', function(err){
+    logging("MYSQL", "ERROR : " + err);
+    if(err.code == 'PROTOCOL_CONNECTION_LOST'){
+      handleDisconnect();
+    }
+    else {
+      throw err;
+    }
+  });
+}
 
+handleDisconnect();
+
+// gate Control message
+const up = "99999:abcd1:fghij:klmno:pqrst";
+const down = "99999:abcde:fghi1:klmno:pqrst";
+
+// MQTT Connection options
 const options = {
-  host: 'IP',
+  host: '117.52.66.245',
   port: 1883,
   protocol: 'mqtt',
   username: "user",
@@ -32,8 +59,9 @@ const options = {
 
 };
 
+// MQTT Connection options
 const optionsDomain = {
-  host: 'Domain',
+  host: 'mqtt.gspark24.co.kr',
   port: 1883,
   protocol: 'mqtt',
   username: "user",
@@ -43,9 +71,11 @@ const optionsDomain = {
   reschedulePings: true
 };
 
+// MQTT Connection
 const client = mqtt.connect(options);
 const clientDomain = mqtt.connect(optionsDomain);
 
+// MQTT gate Response
 client.on('message', (topic, message, packet) => {
   if (message.indexOf('"event_type":"response"') != -1) {
     let response = JSON.parse(message);
@@ -56,6 +86,7 @@ client.on('message', (topic, message, packet) => {
   }
 });
 
+// MQTT gate response topic subscribe
 client.on("connect", () => {
   client.subscribe('/api/ipc/message', {
     qos: 0
@@ -76,12 +107,14 @@ clientDomain.on("error", (error) => {
 
 });
 
+// message option
 var message_options = {
   retain: true,
   qos: 0
 };
 
 
+// for jquery
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -89,6 +122,7 @@ app.use(function(req, res, next) {
   next();
 });
 
+// timestamp string function
 function getCurrentTimeString(){
   var newDate = new Date();
   var time2 = "[" + newDate.toLocaleDateString() + " " + newDate.toTimeString().substr(0, 8) + "] ";
@@ -96,12 +130,14 @@ function getCurrentTimeString(){
   return time2;
 }
 
+// logger
 function logging(who, text){
   var time = getCurrentTimeString();
   var logString = time + "[" + who + "] " + text;
   console.log(logString);
 }
 
+// gate control function
 function gateControl(mode, nodeid, manual, addrType){
 
   var gateNumber;
@@ -133,6 +169,7 @@ function gateControl(mode, nodeid, manual, addrType){
 
   var topic = "/" + nodeid + "/" + gateNumber + "/b";
 
+  // mapping between site code and name
   dbConn.query("SELECT sitename FROM mapping WHERE prjcode = '" + nodeid + "';", function(error, results, fields){
     if(error){
       console.log(error);

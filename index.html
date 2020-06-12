@@ -79,12 +79,12 @@
     <script>
       function gateRequest(node, manual_node, mode, addrType) {
         var _url;
-        if (mode == 0) _url = 'http://106.248.226.202:9875/req/enter/open';
-        else if (mode == 1) _url = 'http://106.248.226.202:9875/req/enter/close';
-        else if (mode == 2) _url = 'http://106.248.226.202:9875/req/exit/open';
-        else if (mode == 3) _url = 'http://106.248.226.202:9875/req/exit/close';
-        else if (mode == 4) _url = 'http://106.248.226.202:9875/req/manual/open';
-        else if (mode == 5) _url = 'http://106.248.226.202:9875/req/manual/close';
+        if (mode == 0) _url = '/req/enter/open';
+        else if (mode == 1) _url = '/req/enter/close';
+        else if (mode == 2) _url = '/req/exit/open';
+        else if (mode == 3) _url = '/req/exit/close';
+        else if (mode == 4) _url = '/req/manual/open';
+        else if (mode == 5) _url = '/req/manual/close';
 
         $.ajax({
           url: _url,
